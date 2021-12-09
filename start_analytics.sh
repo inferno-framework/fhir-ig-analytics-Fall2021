@@ -1,9 +1,6 @@
-#!/bin/bash
-
 SERVER_PORT=8081
 CLIENT_PORT=4200
-HOST='localhost'
-
+HOST=$(curl ifconfig.co)
 
 usage()
 {
@@ -34,7 +31,7 @@ do
     esac
 done
 
-echo -n "INFO: Configuring the application to use IP: ${HOST}, Client_Port: ${CLIENT_PORT}, Server_Port: ${SERVER_PORT}\n"
+echo "INFO: Configuring the application to use IP: ${HOST}, Client_Port: ${CLIENT_PORT}, Server_Port: ${SERVER_PORT}\n"
 
 if [ "$SERVER_PORT" -le "1024" ]; then
 	echo -n "ERROR: The server port must not be less than 1024\n"
@@ -52,7 +49,10 @@ if [ ! -e /usr/bin/docker ]; then
 	sudo apt-get --assume-yes install ca-certificates curl gnupg lsb-release
 	curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 	echo   "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+        sudo apt-get --assume-yes update
         sudo apt-get --assume-yes install docker-ce docker-ce-cli containerd.io
+        sudo apt-get --assume-yes update
+        sudo apt-get --assume-yes install docker
         echo ""
         echo ""
 fi
@@ -61,9 +61,11 @@ if [ ! -e /usr/bin/npm ]; then
         echo "Installing prerequisite npm packages..."
         sudo apt-get --assume-yes update
         sudo apt-get --assume-yes install npm
-        sudo npm cache clean -f
-        sudo npm install -g n
-        sudo n stable
+        sudo npm cache clean -f 2>/dev/null
+        sudo npm install -g n 2>/dev/null
+        sudo n stable 
+        echo ""
+        echo ""
 fi
 
 if [[ ! $(groups $USER | grep -i docker) ]]; then
@@ -83,14 +85,19 @@ echo ""
 echo "Downloading server image from docker repo and starting it on port $SERVER_PORT"
 docker pull mlee6/fhir-ig-analytics
 docker run --name fhir-ig-analytics -p $SERVER_PORT:8081 -d --restart unless-stopped "mlee6/fhir-ig-analytics"
+echo ""
 
+#git clone https://github.com/inferno-framework/fhir-ig-analytics-Fall2021.git
+cd fhir-analytics-ui
 
-git clone https://github.com/inferno-framework/fhir-ig-analytics-Fall2021.git
-cd fhir-ig-analytics-Fall2021/fhir-analytics-ui
-
+echo ""
 echo "Updating configuration files"
 sed -i "s/localhost:8081/${HOST}:${SERVER_PORT}/g" ./src/app/api.service.ts
-sed -i "s/--port 80/--port ${CLIENT_PORT}/g" package.json
+sed -i "s/--port 4200/--port ${CLIENT_PORT}/g" package.json
 
-npm install 
-/usr/bin/nohup npm start &
+echo "Starting Web Server -- Press Enter when Done"
+npm install && npm start &
+
+echo "Docker process status:"
+echo $(docker ps -a | grep fhir-ig-analytics)
+
