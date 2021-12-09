@@ -31,7 +31,7 @@ do
     esac
 done
 
-echo "INFO: Configuring the application to use IP: ${HOST}, Client_Port: ${CLIENT_PORT}, Server_Port: ${SERVER_PORT}\n"
+echo "INFO: Configuring the application to use IP: ${HOST}, Client_Port: ${CLIENT_PORT}, Server_Port: ${SERVER_PORT}"
 
 if [ "$SERVER_PORT" -le "1024" ]; then
 	echo -n "ERROR: The server port must not be less than 1024\n"

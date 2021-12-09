@@ -9,7 +9,8 @@ import { Observable } from 'rxjs';
 
 export class ApiService {
 
-  private SERVER_URL = "http://localhost:8081/srvc";
+  //private SERVER_URL = "http://localhost:8081/srvc";
+  private SERVER_URL = "http://" + window.location.hostname + ":8081/srvc";
 
   constructor(private httpClient: HttpClient) { }
 
