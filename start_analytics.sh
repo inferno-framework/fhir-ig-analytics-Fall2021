@@ -47,26 +47,36 @@ if [ "$CLIENT_PORT" -le "1024" ]; then
 fi
 
 if [ ! -e /usr/bin/docker ]; then
-
+        echo "Installing prerequisite docker packages..."
 	sudo apt-get --assume-yes update
 	sudo apt-get --assume-yes install ca-certificates curl gnupg lsb-release
 	curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 	echo   "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-	sudo apt-get --assume-yes install docker 
         sudo apt-get --assume-yes install docker-ce docker-ce-cli containerd.io
+        echo ""
+        echo ""
 fi
 
-if [[ ! $(groups $USER | grep -i docker) ]];
-      then echo 'Adding $USER to docker group';
+if [ ! -e /usr/bin/npm ]; then
+        echo "Installing prerequisite npm packages..."
+        sudo apt-get --assume-yes update
+        sudo apt-get --assume-yes install npm
+        sudo npm cache clean -f
+        sudo npm install -g n
+        sudo n stable
+fi
+
+if [[ ! $(groups $USER | grep -i docker) ]]; then
+      echo 'Adding $USER to docker group';
       sudo usermod -aG docker $USER > /dev/null 2>&1;
       echo "First time docker user setup, please exit, open new shell, and run again"
       exit
 fi
 
-echo "Cleaning up any old fhir-ig-analytics angular runtimes"
+echo "Cleaning up old fhir-ig-analytics angular runtimes"
 for pid in $(ps -ef | grep "ng serve" | grep -v grep | awk '{print $2}'); do echo "Killing old running angular server $pid"; kill -9 $pid; done
 echo ""
-echo "Cleaning up any old fhir-ig-analytics containers and images"
+echo "Cleaning up old fhir-ig-analytics containers and images"
 for cid in $(docker ps -a | grep fhir-ig-analytics | awk '{print $1}'); do echo 'Stopping running container'; docker stop $cid; echo 'Removing running container'; docker rm $cid; done
 for iid in $(docker images | grep fhir-ig-analytics | awk '{print $3}'); do echo 'Removing old images'; docker rmi $iid; done
 echo ""
@@ -74,12 +84,6 @@ echo "Downloading server image from docker repo and starting it on port $SERVER_
 docker pull mlee6/fhir-ig-analytics
 docker run --name fhir-ig-analytics -p $SERVER_PORT:8081 -d --restart unless-stopped "mlee6/fhir-ig-analytics"
 
-if [ ! -e /usr/bin/npm ]; then
-	sudo apt-get install npm
-	sudo npm cache clean -f
-	sudo npm install -g n
-	sudo n stable
-fi
 
 git clone https://github.com/inferno-framework/fhir-ig-analytics-Fall2021.git
 cd fhir-ig-analytics-Fall2021/fhir-analytics-ui
