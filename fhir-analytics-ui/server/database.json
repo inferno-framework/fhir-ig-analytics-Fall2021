@@ -1,6 +1,0 @@
-{
-    "capabilityStatements": [
-        { "id": 1, "name": "Fruits and Vegetables","quantity": "10", "price":"$10.00" },
-    { "id": 2, "name": "Breads" ,"quantity": "13", "price":"$13.00" }
-    ]
-}

@@ -26,6 +26,7 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.UriInfo;
 
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
@@ -102,6 +103,13 @@ public class AnalyticsApplicationController {
 					
 					igCsFiles.add(file.filename);
 					types.csTypes.put(ig, igCsFiles);
+					
+					if (types.accumulatedCsTypes == null) {
+						types.accumulatedCsTypes = new AccumulatedTypes();
+						types.accumulatedCsTypes.uiConflicts = new ArrayList<>();
+					}
+					
+					types.accumulatedCsTypes.uiConflicts.add(ig + ":" + file.filename);
 				}
 				
 				if (file.resourceType.equals("StructureDefinition")) {
@@ -156,6 +164,24 @@ public class AnalyticsApplicationController {
 					types.accumulatedSdTypes.conflicts = new ArrayList<>();
 				
 				types.accumulatedSdTypes.conflicts.add(map);
+				
+				for (String _key : map.keySet()) {
+					HashMap<String, List<String>> igValues = map.get(_key);
+					
+					for (String igKey : igValues.keySet()) {
+						String showValue = key + ":" + igKey;
+						List<String> values = igValues.get(igKey);
+						for (String sdName : values) {
+							String showValueName = showValue + ":" + sdName;
+							if (types.accumulatedSdTypes.uiConflicts == null)
+								types.accumulatedSdTypes.uiConflicts = new ArrayList<>();
+						
+							types.accumulatedSdTypes.uiConflicts.add(showValueName);
+						}
+					}
+					
+				}
+				
 			} else {
 				if (types.accumulatedSdTypes.similarities == null)
 					types.accumulatedSdTypes.similarities = new ArrayList<>();
@@ -167,26 +193,32 @@ public class AnalyticsApplicationController {
 		if (CollectionUtils.isNotEmpty(types.accumulatedSdTypes.conflicts))
 			types.status = "Extraction successful. Please resolve conflicts to have a more meaningful comparison.";
 		
-		Collections.sort(types.accumulatedSdTypes.conflicts , new Comparator<Object>() {
-			@SuppressWarnings("unchecked")
-			public int compare(Object o1, Object o2) {
-				String key1 = null;
-				String key2 = null;
-				if (o1 instanceof HashMap) {
-					key1 = ((HashMap<String, HashMap<String, List<String>>>) o1).keySet().iterator().next();
-				} else
-					key1 = (String) o1;
-				
-				if (o2 instanceof HashMap) {
-					key2 = ((HashMap<String, HashMap<String, List<String>>>) o2).keySet().iterator().next();
-				} else
-					key2 = (String) o2;
-				
-				return key1.compareTo(key2);
-			}
-		});
+		if (CollectionUtils.isNotEmpty(types.accumulatedSdTypes.conflicts)) {
+			Collections.sort(types.accumulatedSdTypes.conflicts , new Comparator<Object>() {
+				@SuppressWarnings("unchecked")
+				public int compare(Object o1, Object o2) {
+					String key1 = null;
+					String key2 = null;
+					if (o1 instanceof HashMap) {
+						key1 = ((HashMap<String, HashMap<String, List<String>>>) o1).keySet().iterator().next();
+					} else
+						key1 = (String) o1;
+
+					if (o2 instanceof HashMap) {
+						key2 = ((HashMap<String, HashMap<String, List<String>>>) o2).keySet().iterator().next();
+					} else
+						key2 = (String) o2;
+
+					return key1.compareTo(key2);
+				}
+			});
+		}
 		
-		Collections.sort(types.accumulatedSdTypes.similarities);
+		if (CollectionUtils.isNotEmpty(types.accumulatedSdTypes.similarities))
+			Collections.sort(types.accumulatedSdTypes.similarities);
+		
+		if (CollectionUtils.isNotEmpty(types.accumulatedSdTypes.uiConflicts))
+			Collections.sort(types.accumulatedSdTypes.uiConflicts);
 		
 		log.info(request.getRemoteHost() + " | GetTypes -identifier:" + queryMap.get("identifier") 
 			+ " -ig1:" + queryMap.get("ig1") + " -ig2: " + queryMap.get("ig2") + " -status: " + types.status);
@@ -217,37 +249,20 @@ public class AnalyticsApplicationController {
 		
 		String identifier = queryMap.get("identifier");
 		
-		String types = queryMap.get("type");
+		String csTypesStr = queryMap.get("csTypes");
+		String sdTypesStr = queryMap.get("sdTypes");
+		List<String> csTypes = null;
 		List<String> sdTypes = null;
-		HashMap<String, List<String>> csTypes = null;
-		if (StringUtils.isNotBlank(types)) { //Create Filter to select only specified elements or Capability Statements
-			for (String type: StringUtils.split(types, ",")) {
-				if (StringUtils.equals(type, "sd")) {
-					String sdTypesStr = queryMap.get("sdTypes");
-					if (StringUtils.isNotBlank(sdTypesStr))
-						sdTypes = Arrays.asList(StringUtils.split(sdTypesStr, ","));
-				}
-				
-				if (StringUtils.equals(type, "cs")) {
-					String ig1CsStr = queryMap.get("ig1Cs");
-					String ig2CsStr = queryMap.get("ig2Cs");
-					
-					if (StringUtils.isNotBlank(ig1CsStr)) {
-						if (csTypes == null)
-							csTypes = new HashMap<>();
-						
-						csTypes.put(package_names[0], Arrays.asList(StringUtils.split(ig1CsStr, ",")));
-						
-					}
-					
-					if (StringUtils.isNotBlank(ig2CsStr)) {
-						if (csTypes == null)
-							csTypes = new HashMap<>();
-						
-						csTypes.put(package_names[1], Arrays.asList(StringUtils.split(ig2CsStr, ",")));
-					}	
-				}
-			}
+		
+		if (StringUtils.isNotBlank(sdTypesStr) || StringUtils.isNotBlank(csTypesStr)) {
+			csTypes = new ArrayList<>();
+			sdTypes = new ArrayList<>();
+			
+			if (StringUtils.isNotBlank(csTypesStr))
+				csTypes = Arrays.asList(StringUtils.split(csTypesStr, ","));
+			
+			if (StringUtils.isNotBlank(sdTypesStr))
+				sdTypes = Arrays.asList(StringUtils.split(sdTypesStr, ","));
 		}
 
 		IGSComparator result = getCompare(package_names, identifier, sdTypes, csTypes);
@@ -352,9 +367,60 @@ public class AnalyticsApplicationController {
 		return null;
 	}
 	
-	private IGSComparator getCompare(String[] package_names, String identifier, List<String> sdTypes, HashMap<String, List<String>> csTypes) {
+	private void addIntoMap(String key, String value, HashMap<String, List<String>> map) {
+		List<String> values = map.get(key);
+		if (values == null)
+			values = new ArrayList<>();
+		
+		values.add(value);
+		map.put(key, values);
+	}
+	
+	private IGSComparator getCompare(String[] package_names, String identifier, List<String> sdTypes, List<String> csTypes) {
 		IGSComparator igsComparator = new IGSComparator(package_names[0], package_names[1], 0);
 		
+		HashMap<String, List<String>> csTypesMap = null;
+		if (csTypes != null) {
+			csTypesMap = new HashMap<>();
+			for (String csType : csTypes) {
+				String[] csTypeArr = StringUtils.split(csType, ":");
+				if (csTypeArr.length == 1) {
+					for (String package_name : package_names)
+						addIntoMap(package_name, csTypeArr[0], csTypesMap);
+				
+				} else {
+					String igname = csTypeArr[0]; //Indicates the IG of filtered capability statement
+					String value = csTypeArr[1]; //Indicates the capability statement
+					addIntoMap(igname, value, csTypesMap);
+				}
+			}
+		}
+		
+		HashMap<String, List<String>> sdTypesMap = null;
+		if (sdTypes != null) {
+			sdTypesMap = new HashMap<>();
+			for (String sdType : sdTypes) {
+				String[] sdTypeArr = StringUtils.split(sdType, ":");
+				if (sdTypeArr.length == 1) {
+					for (String package_name : package_names)
+						addIntoMap(package_name, sdTypeArr[0], sdTypesMap);
+				
+				} else if (sdTypeArr.length == 2) {
+					String igname = sdTypeArr[0];
+					String type = sdTypeArr[1];
+					
+					addIntoMap(igname, type, sdTypesMap);
+				
+				} else {	
+					String type = sdTypeArr[0]; //Structure definition Type
+					String igname = sdTypeArr[1];
+					String typeName = sdTypeArr[2]; //Structure Definition name
+					
+					addIntoMap(igname, type + ":" + typeName, sdTypesMap);
+				}
+			}
+		}
+			
 		HashMap<String, List<String>> conflictMap = new HashMap<>();
 		boolean haveConflictMsg = false;
 		
@@ -369,8 +435,8 @@ public class AnalyticsApplicationController {
 			
 			for (Files file : index.files) {
 				if (file.resourceType.equals("CapabilityStatement")) {
-					if (csTypes != null) {
-						List<String> filterCs = csTypes.get(ig);
+					if (csTypesMap != null) {
+						List<String> filterCs = csTypesMap.get(ig);
 						if (filterCs == null || !filterCs.contains(file.filename)) //This CS for this IG should be filtered
 							continue;
 					}
@@ -427,31 +493,37 @@ public class AnalyticsApplicationController {
 				}
 				
 				if (file.resourceType.equals("StructureDefinition")) {
-					StructureDefinition structureDefinition = JSONParserUtil.getObject(packageDir + File.separator + file.filename, StructureDefinition.class);
-					if (structureDefinition == null || structureDefinition.snapshot == null || CollectionUtils.isEmpty(structureDefinition.snapshot.elements)) {
+					StructureDefinition sd = JSONParserUtil.getObject(packageDir + File.separator + file.filename, StructureDefinition.class);
+					if (sd == null || sd.snapshot == null || CollectionUtils.isEmpty(sd.snapshot.elements)) {
 						igsComparator.addToStatus("No SD snapshot for " + ig);
 						continue;
 					}
 					else {
-						if (sdTypes != null && !sdTypes.contains(structureDefinition.type)) //Should filter
-							continue;
+						if (sdTypesMap != null) {
+							List<String> filterSds = sdTypesMap.get(ig);
+							if (MapUtils.isNotEmpty(sdTypesMap) && filterSds == null)
+								continue;
+
+							if (filterSds != null && !(filterSds.contains(sd.type) || filterSds.contains(sd.type + ":" + sd.id)))
+								continue;
+						}
 						
 						if (!haveConflictMsg) {
 							List<String> igSdTypes = conflictMap.get(ig);
 							if (igSdTypes == null)
 								igSdTypes = new ArrayList<>();
 							else {
-								haveConflictMsg = igSdTypes.contains(structureDefinition.type);
+								haveConflictMsg = igSdTypes.contains(sd.type);
 								if (haveConflictMsg)
 									igsComparator.addToStatus("At least one Conflicting SDType exists. Please resolve conflicts by fetching getTypes and then compare");
 							}
-
-							igSdTypes.add(structureDefinition.type);
+							
+							igSdTypes.add(sd.type);
 							conflictMap.put(ig, igSdTypes);
 						}
 								
-						IGComparator igComparator = igsComparator.getIgComparator(structureDefinition.type, 0);
-						for (Element element : structureDefinition.snapshot.elements) {
+						IGComparator igComparator = igsComparator.getIgComparator(sd.type, 0);
+						for (Element element : sd.snapshot.elements) {
 							igComparator.add(ig, element);
 						}
 					}

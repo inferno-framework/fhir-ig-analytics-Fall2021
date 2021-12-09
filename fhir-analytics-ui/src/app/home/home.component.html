@@ -17,8 +17,8 @@
     <br />
 
     <div id="butn" class = "example-button-row">
-      <button id="compareAll" (click) = "clickCompareAll()" mat-raised-button>Auto-Compare Artifacts</button>
-      <button id="getTypes" (click) = "clickGetTypes()" mat-raised-button>Manually Resolve Conflicts</button>
+      <button id="compareAll" [disabled]="manually_resolve_button_click" (click) = "clickCompareAll()" mat-raised-button>Auto-Compare Artifacts</button>
+      <button id="getTypes" [disabled]="compare_all_button_click" (click) = "clickManuallyResolve()" mat-raised-button>Manually Select Artifacts</button>
       <button id="reset" (click) = "reset()" mat-raised-button>Reset</button>
     </div>
 
@@ -31,7 +31,7 @@
               <!-- <h3>Status: {{status}}</h3>-->
               <!-- <h3>Identifier: {{identifier}}</h3>
               <!--  <label for="accumulatedSdTypes"><h3>Accumulated SD Types:</h3></label> -->
-                <h3><u>Similarities</u></h3>
+                <h3><u><b>Profiled resources found in both IGs that only appear once:</b></u></h3>
                   <div *ngFor="let artifact of similarities">
                     <label>
                       <input type="checkbox" [value]="artifact" (change)="onCheckboxChange($event)" />
@@ -39,39 +39,39 @@
                     </label>
                   </div>
                 <br>
-                <h3><u>Conflicts</u></h3>
+                <h3><u><b>Profiled resources found in just one IG:</b></u></h3>
+                  <div *ngFor="let artifact of singleProfile">
+                    <label>
+                      <input type="checkbox" [value]="artifact" (change)="onCheckboxChange($event)" />
+                        {{artifact}}
+                    </label>
+                  </div>
+                  <br>
+                <h3><u><b>Resources with more than one profile:</b></u></h3>
+                
+                  <div *ngFor="let artifact of multipleProfiles">
+                    <label>
+                      <input type="checkbox" [value]="artifact" (change)="onCheckboxChange($event)" />
+                        {{artifact}}
+                    </label>
+                  </div>
+                  <br>
+
         </div>
 
         <div id="cs" class = "sdcsoutputs">
           <h2><u>Capability Statements</u></h2>
-          <!--<h3>IG1: {{ig1List}}</h3>-->
-
-          <div class="container">
-            <form [formGroup]="form" (ngSubmit)="clickCompare()">
-
+          <div class="container">                
+            <form [formGroup]="form" (ngSubmit)="clickCompareSelected()">
                 <div class="form-group">
-                    <label for="ig1"><h3>IG 1:</h3></label>
-                    <div *ngFor="let ig1json of ig1List">
+                    <div *ngFor="let artifact of cs_conflicts">
                       <label>
-                        <input type="checkbox" [value]="ig1json" (change)="onCheckboxChangeCS($event)" />
-                          {{ig1json}}
+                        <input type="checkbox" [value]="artifact" (change)="onCheckboxChangeCS($event)" />
+                          {{artifact}}
                       </label>
                     </div>
                 </div>
-
                 <br>
-
-                <div class="form-group">
-                  <label for="ig2"><h3>IG 2:</h3></label>
-                  <div *ngFor="let ig2json of ig2List">
-                    <label>
-                      <input type="checkbox" [value]="ig2json" (change)="onCheckboxChangeCS($event)" />
-                        {{ig2json}}
-                    </label>
-                  </div>
-              </div>
-
-              <!--  <button class="btn btn-primary" type="submit" [disabled]="!form.valid">Submit</button>-->
             </form>
           </div>
 
@@ -79,7 +79,7 @@
         <br><br><br>
 
         <div id="butn" class = "example-button-row">
-          <button id="compare" (click) = "clickCompare()" mat-raised-button>Compare Selected</button>
+          <button id="compare" (click) = "clickCompareSelected()" mat-raised-button>Compare Selected</button>
         </div>
         <br><br><br>
     </div>
@@ -90,8 +90,14 @@
           <h2>Status: <h3>{{status}}</h3></h2>
 
           <div *ngIf="apisuccess">
+
+            <div *ngIf="extracted_with_conflicts">
+              <br>
+              <h4>If you want to download the file with conflicts, please click the 'Download' button. <br></h4>
+              <h4>If you want manually resolve conflicts, click 'Reset' and then click 'Manually Select Artifacts'. <br></h4>
+            </div>
+
             <button id="btnDownloadFile" (click) = "clickDownloadFile()" mat-raised-button>Download File</button>
-            <!--<button id="btnshowstats" (click) = "clickDisplayCSStats()" mat-raised-button>Show CS Stats</button> -->
 
             <div *ngIf="show_download_url">
               <br>
@@ -102,18 +108,19 @@
           </div>
       </div>
 
-      <div id="csstats" class = "outputs">
+      <div *ngIf="showsummary" id="summary" class = "outputs">
         <h2 class="align-left"><u>User Selections Summary</u></h2>
 
-        <h3 class="align-left">User selected the below artifacts from similarities: </h3>
+        <h3 class="align-left">User selected the below artifacts from Structure Definitions: </h3>
         {{selected_similarities}}
 
+        <!--
         <br><br>
-        <h3 class="align-left">User selected the below artifacts from conflicts: </h3>
-        {{selected_conflicts}}
+        <h3 class="align-left">User selected the below artifacts from Structure Definitions: </h3>
+        {{selected_conflicts}}-->
 
         <br><br>
-        <h3 class="align-left">User selected the below artifacts from capability statements: </h3>
+        <h3 class="align-left">User selected the below artifacts from Capability Statements: </h3>
         {{selected_cs}}
       </div>
 

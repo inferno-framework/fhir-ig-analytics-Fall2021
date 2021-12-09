@@ -1,5 +1,4 @@
-
 export interface IAsdtypes {
     similarities: string[];
-    conflicts: string[];
+    uiConflicts: string[];
 }
