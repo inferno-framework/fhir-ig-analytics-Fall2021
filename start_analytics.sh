@@ -49,17 +49,18 @@ fi
 if [ ! -e /usr/bin/docker ]; then
 
 	sudo apt-get --assume-yes update
+	sudo apt-get --assume-yes install ca-certificates curl gnupg lsb-release
 	curl -fsSL https://download.docker.com/linux/debian/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
 	echo   "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
-	sudo apt-get --assume-yes install docker ca-certificates curl gnupg lsb-release
+	sudo apt-get --assume-yes install docker 
         sudo apt-get --assume-yes install docker-ce docker-ce-cli containerd.io
 fi
 
 if [[ ! $(groups $USER | grep -i docker) ]];
       then echo 'Adding $USER to docker group';
       sudo usermod -aG docker $USER > /dev/null 2>&1;
-      exec newgrp docker; 
-      newgrp docker;
+      echo "First time docker user setup, please exit, open new shell, and run again"
+      exit
 fi
 
 echo "Cleaning up any old fhir-ig-analytics angular runtimes"
