@@ -1,0 +1,63 @@
+    ##############################
+## FHIR
+##############################
+package
+pkg1
+pkg2
+*.tgz
+package_1
+package_1_previous
+package_2_previous
+
+
+##############################
+## Java
+##############################
+.classpath
+.project
+.settings
+.jar
+
+##############################
+## Gradle
+##############################
+bin/
+build/
+.gradle
+.gradletasknamecache
+gradle-app.setting
+!gradle-wrapper.jar
+
+##############################
+## Eclipse
+##############################
+.settings/
+bin/
+tmp/
+.metadata
+.classpath
+.project
+*.tmp
+*.bak
+*.swp
+*~.nib
+local.properties
+.loadpath
+.factorypath
+
+##############################
+## IntelliJ
+##############################
+out/
+.idea/
+.idea_modules/
+*.iml
+*.ipr
+*.iws
+
+##############################
+## OS X
+##############################
+*/.DS_Store
+../.DS_Store
+.DS_Store

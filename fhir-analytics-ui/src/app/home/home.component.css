@@ -1,0 +1,92 @@
+#getTypes{
+    margin-left:50px;
+}
+
+#autocompare{
+    width: 120px;
+    height: 40px;
+}
+
+#btnDownloadFile{
+    width: 120px;
+    height: 40px;
+}
+
+#btnshowstats{
+    width: 120px;
+    height: 40px;
+    margin-left:50px;
+}
+
+#reset{
+    width: 120px;
+    height: 40px;
+    margin-left:50px;
+}
+
+#compare{
+    width: 150px;
+    height: 40px;
+}
+    
+#butn{
+    margin: 0 auto;
+    display: block;
+}
+
+#output{
+    margin: 0 auto;
+}
+
+#csstats{
+    margin: 0 auto;
+    margin-left:50px;
+}
+
+#sd{
+    margin: 0 auto;
+}
+
+#cs{
+    margin: 0 auto;
+    margin-left:50px; 
+}
+
+.outputs {
+    border-color: #FFFFFF;
+    border-style: ridge;
+    display: inline-block;
+    text-align: center;
+    vertical-align: top;
+    overflow: auto;
+}
+
+.sdcsoutputs {
+    border-color: #FFFFFF;
+    border-style: ridge;
+    display: inline-block;
+    text-align: left;
+    vertical-align: top;
+    overflow: auto;
+    object-fit: contain;
+    max-width: 400px;
+    height: 400px;
+}
+
+.asdcontainer1 {
+    width: 40vw;
+    height: 60vh;
+    border: 1px solid black;
+    margin: auto;
+    position: absolute;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    overflow: auto;
+}
+
+.align-left {
+    text-align: left;
+}
+

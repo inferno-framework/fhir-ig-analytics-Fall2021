@@ -1,0 +1,172 @@
+<div style="text-align:center">
+    <h1>
+      IG Comparator
+    </h1>
+
+    <div class="form-group">
+        <label for="ig1" class="sr-only"><h2>IG 1</h2></label>
+        <input type="text" id="ig1" value = "https://www.hl7.org/fhir/us/core/package.tgz" style="width:300px"/>
+    </div>
+    <br />
+
+    <div class="form-group">
+        <label for="ig2" class="sr-only"><h2>IG 2</h2></label>
+        <input type="text" id="ig2" value = "https://hl7.org/fhir/us/qicore/package.tgz" style="width:300px"/>
+    </div>
+    <br />
+    <br />
+
+    <div id="butn" class = "example-button-row">
+      <button id="compareAll" (click) = "clickCompareAll()" mat-raised-button>Auto-Compare Artifacts</button>
+      <button id="getTypes" (click) = "clickGetTypes()" mat-raised-button>Manually Resolve Conflicts</button>
+      <button id="reset" (click) = "reset()" mat-raised-button>Reset</button>
+    </div>
+
+    <br><br>
+
+    <div *ngIf="getTypesOutput">
+      <h4>Please select the artifacts you want to compare.</h4>
+        <div id="sd" class = "sdcsoutputs">
+                <h2><u>Structure Definitions (Cumulative)</u></h2>
+              <!-- <h3>Status: {{status}}</h3>-->
+              <!-- <h3>Identifier: {{identifier}}</h3>
+              <!--  <label for="accumulatedSdTypes"><h3>Accumulated SD Types:</h3></label> -->
+                <h3><u>Similarities</u></h3>
+                  <div *ngFor="let artifact of similarities">
+                    <label>
+                      <input type="checkbox" [value]="artifact" (change)="onCheckboxChange($event)" />
+                        {{artifact}}
+                    </label>
+                  </div>
+                <br>
+                <h3><u>Conflicts</u></h3>
+        </div>
+
+        <div id="cs" class = "sdcsoutputs">
+          <h2><u>Capability Statements</u></h2>
+          <!--<h3>IG1: {{ig1List}}</h3>-->
+
+          <div class="container">
+            <form [formGroup]="form" (ngSubmit)="clickCompare()">
+
+                <div class="form-group">
+                    <label for="ig1"><h3>IG 1:</h3></label>
+                    <div *ngFor="let ig1json of ig1List">
+                      <label>
+                        <input type="checkbox" [value]="ig1json" (change)="onCheckboxChangeCS($event)" />
+                          {{ig1json}}
+                      </label>
+                    </div>
+                </div>
+
+                <br>
+
+                <div class="form-group">
+                  <label for="ig2"><h3>IG 2:</h3></label>
+                  <div *ngFor="let ig2json of ig2List">
+                    <label>
+                      <input type="checkbox" [value]="ig2json" (change)="onCheckboxChangeCS($event)" />
+                        {{ig2json}}
+                    </label>
+                  </div>
+              </div>
+
+              <!--  <button class="btn btn-primary" type="submit" [disabled]="!form.valid">Submit</button>-->
+            </form>
+          </div>
+
+        </div>
+        <br><br><br>
+
+        <div id="butn" class = "example-button-row">
+          <button id="compare" (click) = "clickCompare()" mat-raised-button>Compare Selected</button>
+        </div>
+        <br><br><br>
+    </div>
+
+    <div *ngIf="compareOutput">
+      <div id="output" class = "outputs">
+          <h2 class="align-left"><u>Output of comparison</u></h2>
+          <h2>Status: <h3>{{status}}</h3></h2>
+
+          <div *ngIf="apisuccess">
+            <button id="btnDownloadFile" (click) = "clickDownloadFile()" mat-raised-button>Download File</button>
+            <!--<button id="btnshowstats" (click) = "clickDisplayCSStats()" mat-raised-button>Show CS Stats</button> -->
+
+            <div *ngIf="show_download_url">
+              <br>
+              <h4>Please open the below URL in your browser to download the file. <br></h4><h3> {{download_url}}</h3>
+            </div>
+            <br>
+            <br>
+          </div>
+      </div>
+
+      <div id="csstats" class = "outputs">
+        <h2 class="align-left"><u>User Selections Summary</u></h2>
+
+        <h3 class="align-left">User selected the below artifacts from similarities: </h3>
+        {{selected_similarities}}
+
+        <br><br>
+        <h3 class="align-left">User selected the below artifacts from conflicts: </h3>
+        {{selected_conflicts}}
+
+        <br><br>
+        <h3 class="align-left">User selected the below artifacts from capability statements: </h3>
+        {{selected_cs}}
+      </div>
+
+      <div id="csstats" class = "outputs">
+        <h2 class="align-left"><u>Compatibility Statement Stats</u></h2>
+
+        <h2>Client</h2>
+
+        <table>
+          <tr>
+            <th>IG</th>
+            <th>Version</th>
+            <th>FHIR Version</th>
+            <th>Format</th>
+          </tr>
+          <tr>
+            <td>IG1</td>
+            <td>{{this.stats_client_ig1_version}}</td>
+            <td>{{this.stats_client_ig1_fhirversion}}</td>
+            <td>{{this.stats_client_ig1_format}}</td>
+          </tr>
+          <tr>
+            <td>IG2</td>
+            <td>{{this.stats_client_ig2_version}}</td>
+            <td>{{this.stats_client_ig2_fhirversion}}</td>
+            <td>{{this.stats_client_ig2_format}}</td>
+          </tr>
+        </table>
+
+        <br>
+
+        <h2>Server</h2>
+        <table>
+          <tr>
+            <th>IG</th>
+            <th>Version</th>
+            <th>FHIR Version</th>
+            <th>Format</th>
+          </tr>
+          <tr>
+            <td>IG1</td>
+            <td>{{this.stats_server_ig1_version}}</td>
+            <td>{{this.stats_server_ig1_fhirversion}}</td>
+            <td>{{this.stats_server_ig1_format}}</td>
+          </tr>
+          <tr>
+            <td>IG2</td>
+            <td>{{this.stats_server_ig2_version}}</td>
+            <td>{{this.stats_server_ig2_fhirversion}}</td>
+            <td>{{this.stats_server_ig2_format}}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+
+</div>
