@@ -6,25 +6,18 @@ usage()
 {
    echo "This script configures the client and server for FHIR analytics application."
    echo
-   echo "Syntax: start_application -c <ClientPort> -s <ServerPort> -h <ServerHost>"
+   echo "Syntax: start_application -s <ServerPort>"
    echo "options:"
-   echo "-c     Provide a client port number more than 1024 and not used by any other application."
-   echo "       UI is browsed this port. Default port is 4200 if not specified."
-   echo ""
    echo "-s     Provide a server port number more than 1024 and not used by any other application." 
    echo "       UI connects to the server on this port. Default port is 8081 if not specified."
-   echo ""
-   echo "-h     Provide host server IP or hostname. You should be able to access Server APIs using server host and server port."
-   echo "       http://<ServerIP>:<ServerPort>/srvc/fhirAnalytics/compare?identifier=123456"
+   echo "       http://$HOST:<ServerPort>/srvc/fhirAnalytics/compare?identifier=123456"
    echo
 }
 
-while getopts c:s:h: flag
+while getopts s: flag
 do
     case "${flag}" in
-        c) CLIENT_PORT=${OPTARG};;
         s) SERVER_PORT=${OPTARG};;
-        h) HOST=${OPTARG};;
 	*)
          usage
          exit;;
@@ -82,21 +75,24 @@ echo "Cleaning up old fhir-ig-analytics containers and images"
 for cid in $(docker ps -a | grep fhir-ig-analytics | awk '{print $1}'); do echo 'Stopping running container'; docker stop $cid; echo 'Removing running container'; docker rm $cid; done
 for iid in $(docker images | grep fhir-ig-analytics | awk '{print $3}'); do echo 'Removing old images'; docker rmi $iid; done
 echo ""
-echo "Downloading server image from docker repo and starting it on port $SERVER_PORT"
-docker pull mlee6/fhir-ig-analytics
-docker run --name fhir-ig-analytics -p $SERVER_PORT:8081 -d --restart unless-stopped "mlee6/fhir-ig-analytics"
+echo "Downloading backend image from docker repo and starting it on port $SERVER_PORT"
+docker pull mlee6/fhir-ig-analytics:latest
+docker run --name fhir-ig-analytics -p 8081:8081 -d --restart unless-stopped "mlee6/fhir-ig-analytics:latest"
 echo ""
+echo "Downloading frontend image from docker repo and starting it on port $SERVER_PORT"
+docker pull mlee6/fhir-ig-analytics:ui-latest
+docker run --name fhir-ig-analytics-ui -p $CLIENT_PORT:4200 -d --restart unless-stopped "mlee6/fhir-ig-analytics:ui-latest"
 
-#git clone https://github.com/inferno-framework/fhir-ig-analytics-Fall2021.git
-cd fhir-analytics-ui
 
-echo ""
-echo "Updating configuration files"
-sed -i "s/localhost:8081/${HOST}:${SERVER_PORT}/g" ./src/app/api.service.ts
-sed -i "s/--port 4200/--port ${CLIENT_PORT}/g" package.json
+#cd fhir-analytics-ui
 
-echo "Starting Web Server -- Press Enter when Done"
-npm install && npm start &
+#echo ""
+#echo "Updating configuration files"
+#sed -i "s/localhost:8081/${HOST}:${SERVER_PORT}/g" ./src/app/api.service.ts
+#sed -i "s/--port 4200/--port ${CLIENT_PORT}/g" package.json
+
+#echo "Starting Web Server -- Press Enter when Done"
+#npm install && npm start &
 
 echo "Docker process status:"
 echo $(docker ps -a | grep fhir-ig-analytics)
