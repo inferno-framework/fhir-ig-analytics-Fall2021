@@ -1,0 +1,8 @@
+FROM adoptopenjdk/openjdk11:latest
+RUN mkdir /opt/app
+RUN apt-get update
+RUN apt-get install tar
+RUN apt-get install wget
+COPY analytics-0.0.1.jar /opt/app
+COPY application.properties /opt/app
+CMD ["java", "-jar", "/opt/app/analytics-0.0.1.jar", "--spring.config.location=/opt/app/application.properties"]

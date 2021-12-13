@@ -19,6 +19,7 @@ will be generated. That jar file includes all the dependencies to run the progra
 - Open eclipse
 - File -> Open Project From File System -> Browse to the checkout directory and then go inside analysis -> Open -> Finish
 - Add gradle nature in the project (Right Click on project -> Configure -> Enable Gradle nature)
+- Open the resource file application.properties file and change port by updating server.port
 - Now you should be able to run the AnalyticsApplication.java file by doing right click -> Run as -> Java Application
 
 ### Setup IntelliJ
@@ -30,10 +31,36 @@ will be generated. That jar file includes all the dependencies to run the progra
 - Right click AnalyticsApplication.java and Run... as Java Application.
 
 ### How to run the application on server
-java -jar ./build/libs/analytics-0.0.1.jar <full_path_package_1> <full_path_package_2>
-Example:
-java -jar ./build/libs/analytics-0.0.1.jar ~/ig/uscore.tgz ~/ig/qicore.tgz
+- Checkout go inside analytics dir
+- Make sure WGET and TAR binaries/packages are installed.
+- Change the application server port other than 8081, update application.properties file server.port variable
+- Run command gradle build
+	gradle build
+- Run the application server
+	java -jar ./build/libs/analytics-0.0.1.jar
 
+Now, go to the browser and test getTypes and compare call for two IGs are working
+http://localhost:<port>/srvc/fhirAnalytics/getTypes?ig1=<IG1-Download-package-URL>&ig2=<IG2-Download-package-URL>
+http://localhost:<port>/srvc/fhirAnalytics/compare?ig1=<IG1-Download-package-URL>&ig2=<IG2-Download-package-URL>
+
+### How to run the UI
+	
+Read the readme file under fhir-analytics-ui directory
+	
+### Containerization of the Application
+- Checkout the code
+- Install docker
+
+### Create Image
+Please use the docker files to create docker images after installing docker on an Ubuntu 20.4
+
+### Deploy docker images
+- On the cloud backend SSH to the terminal
+- Checkout the code
+- Run sh start_analytics.sh
+	This file would download images from public repositories and deploy the containers.
+- The server container would run on 8081 and UI would run on 4200.
+	
 ### Reference Documentation
 For further reference, please consider the following sections:
 

@@ -1,0 +1,56 @@
+#FROM node:latest as build
+#from ubuntu
+
+#RUN apt-get install npm
+#RUN npm cache clean -f
+#RUN npm install -g n
+#RUN n stable
+#
+#RUN git clone https://github.com/inferno-framework/fhir-ig-analytics-Fall2021.git
+#RUN cd fhir-ig-analytics-Fall2021/fhir-analytics-ui
+#
+#RUN sed -i "s/--port 80/--port 4300/g" package.json
+#RUN npm install 
+#
+#CMD ["npm", "start"]
+
+
+# Stage 1: Compile and Build angular codebase
+
+# Use official node image as the base image
+FROM node:latest as build
+
+# Add the source code to app
+#RUN git clone https://github.com/inferno-framework/fhir-ig-analytics-Fall2021.git
+#WORKDIR fhir-ig-analytics-Fall2021/fhir-analytics-ui
+ADD fhir-ig-analytics-Fall2021/fhir-analytics-ui/ /usr/local/app/
+
+
+# Set the working directory
+WORKDIR /usr/local/app
+RUN ls
+
+# Add the source code to app
+#RUN git clone https://github.com/inferno-framework/fhir-ig-analytics-Fall2021.git
+#RUN cd fhir-ig-analytics-Fall2021/fhir-analytics-ui
+#COPY src ./
+
+# Install all the dependencies
+RUN npm install
+
+# Generate the build of the application
+RUN npm run build
+
+
+# Stage 2: Serve app with nginx server
+
+# Use official nginx image as the base image
+#FROM nginx:latest
+
+# Copy the build output to replace the default nginx contents.
+#COPY --from=build /usr/local/app/dist/sample-angular-app /usr/share/nginx/html
+
+# Expose port 80
+EXPOSE 4200
+
+CMD ["npm", "start"]
